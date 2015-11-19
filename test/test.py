@@ -22,36 +22,36 @@ class Page:
         self.driver = driver
 
     def open(self):
-        print(1)
         url = urljoin(self.BASE_URL, self.PATH)
-        print(1.5, url)
         self.driver.get(url)
-        print(2)
         self.driver.maximize_window()
+
+    def close(self):
+        self.driver.close()
 
 class Component(object):
     def __init__(self, driver):
         self.driver = driver
 
-class AuthPage(Page):
+class MainPage(Page):
     PATH = ''
 
-    def form(self):
-        return AuthForm(self.driver)
+    @property
+    def login_button(self):
+        return LoginButton(self.driver)
 
     def open(self):
         Page.open(self)
-        print('start wait')
         WebDriverWait(self.driver, 10).until(
-            expected_conditions.presence_of_element_located((By.XPATH, AuthForm.LOGIN_BUTTON))
+            expected_conditions.presence_of_element_located((By.XPATH,
+                LoginButton.XPATH))
         )
-        print('end wait')
 
-class AuthForm(Component):
-    LOGIN_BUTTON = '//span[contains(@class, "ph-button__inner_profilemenu_signin")]'
+class LoginButton(Component):
+    XPATH = '//span[contains(@class, "ph-button__inner_profilemenu_signin")]'
 
     def open_form(self):
-        self.driver.find_element_by_xpath(self.LOGIN_BUTTON).click()
+        self.driver.find_element_by_xpath(self.XPATH).click()
 
 
 class TargetTest(unittest.TestCase):
@@ -63,13 +63,15 @@ class TargetTest(unittest.TestCase):
             command_executor='http://127.0.0.1:4444/wd/hub',
             desired_capabilities=getattr(DesiredCapabilities, browser).copy()
         )
+        self.main_page = MainPage(self.driver)
+        self.main_page.open()
 
 
     def test(self):
-        auth_page = AuthPage(self.driver)
-        auth_page.open()
-
-        auth_form = auth_page.form()
-        auth_form.open_form()
+        login_button = self.main_page.login_button
+        login_button.open_form()
         self.assertEqual(3, 1)
+
+    def tearDown(self):
+        self.main_page.close()
 

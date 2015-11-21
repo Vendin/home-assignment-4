@@ -1,5 +1,30 @@
 from urlparse import urlparse, urljoin
-from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
+def check_visible(xpath, driver):
+    try:
+        WebDriverWait(driver, 2).until(
+            EC.visibility_of_element_located((
+                By.XPATH, xpath
+            ))
+        )
+        return True
+    except TimeoutException:
+        return False
+
+def check_invisible(xpath, driver):
+    try:
+        WebDriverWait(driver, 2).until(
+            EC.invisibility_of_element_located((
+                By.XPATH, xpath
+            ))
+        )
+        return True
+    except TimeoutException:
+        return False
 
 class Page:
     BASE_URL = 'https://target.my.com/'

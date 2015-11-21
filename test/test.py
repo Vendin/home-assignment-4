@@ -41,6 +41,11 @@ class AudiencePage(Page):
         ok_btn.click()
         return OKGroupAdder(self.driver)
     
+    def get_vk_group_adder(self):
+        ok_btn = self.driver.find_element_by_xpath(self.VK_BTN_XPATH)
+        ok_btn.click()
+        return VKGroupAdder(self.driver)
+    
     def wait_for_load(self):
         try:
             WebDriverWait(self.driver, 10).until(
@@ -88,10 +93,10 @@ class TopCtrAdder(Component):
         )
         delete.click()
         self._wait_no_ctr(id)
-
-class OKGroupAdder(Component):
+        
+class GroupAdder(Component):
     INPUT_XPATH = '//input[contains(@class, "suggester__input") and not(ancestor::*[contains(@style, "display: none")])]'
-    HELPER_XPATH = INPUT_XPATH+'/following-sibling::div[contains(@class, "suggester__list suggester__list_grouped")]'
+    HELPER_XPATH = INPUT_XPATH+'/following-sibling::div[contains(@class, "suggester__list")]'
     
     def input_group(self, group):
         group_input = self.driver.find_element_by_xpath(self.INPUT_XPATH)
@@ -99,6 +104,13 @@ class OKGroupAdder(Component):
     
     def check_has_helper(self):
         return check_visible(self.HELPER_XPATH, self.driver)
+        
+class OKGroupAdder(GroupAdder):
+    pass
+
+class VKGroupAdder(GroupAdder):
+    def check_has_helper(self):
+        return check_visible(self.HELPER_XPATH, self.driver, ttl=5)
     
 class TargetTest(unittest.TestCase):
     USERNAME = u'name'
@@ -131,7 +143,7 @@ class TargetTest(unittest.TestCase):
     def tearDown(self):
         self.page.close()
         self.driver.quit()
-        
+    
     def test_ctr_filters_input(self):
         wrong_ctr_id = 0
         top_ctr_adder = self.page.get_top_ctr_adder()
@@ -163,3 +175,15 @@ class TargetTest(unittest.TestCase):
         ok_ctr_adder = self.page.get_ok_group_adder()
         ok_ctr_adder.input_group(ok_strange_theme)
         self.assertFalse(ok_ctr_adder.check_has_helper())
+    
+    def test_vk_ctr_has_helper(self):
+        vk_group = "Sport"
+        vk_ctr_adder = self.page.get_vk_group_adder()
+        vk_ctr_adder.input_group(vk_group)
+        self.assertTrue(vk_ctr_adder.check_has_helper())
+    
+    def test_ok_ctr_filters_wrong(self):
+        vk_strange_theme = "asdfsdfsdfsdfasdf12312@as2"
+        vk_ctr_adder = self.page.get_vk_group_adder()
+        vk_ctr_adder.input_group(vk_strange_theme)
+        self.assertFalse(vk_ctr_adder.check_has_helper())

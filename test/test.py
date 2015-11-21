@@ -22,12 +22,12 @@ class AudiencePage(Page):
     HDR_XPATH = '//h3[contains(@class, "audience-page__title")]'
     
     BTN_XPATH_TMPL = '//ul[contains(@class, "sources-nav")]/li[%i]/span[1]'
-    TOP_BTN_XPATH = BTN_XPATH_TMPL % 1
-    OK_BTN_XPATH = BTN_XPATH_TMPL % 2
-    VK_BTN_XPATH = BTN_XPATH_TMPL % 3
-    OKAPP_BTN_XPATH = BTN_XPATH_TMPL % 4
-    VKAPP_BTN_XPATH = BTN_XPATH_TMPL % 5
-    USRLIST_BTN_XPATH = BTN_XPATH_TMPL % 6
+    TOP_BTN_XPATH      = BTN_XPATH_TMPL % 1
+    OK_BTN_XPATH       = BTN_XPATH_TMPL % 2
+    VK_BTN_XPATH       = BTN_XPATH_TMPL % 3
+    OKAPP_BTN_XPATH    = BTN_XPATH_TMPL % 4
+    VKAPP_BTN_XPATH    = BTN_XPATH_TMPL % 5
+    USRLIST_BTN_XPATH  = BTN_XPATH_TMPL % 6
     SRCHLIST_BTN_XPATH = BTN_XPATH_TMPL % 7
     PRICELST_BTN_XPATH = BTN_XPATH_TMPL % 8
     
@@ -42,9 +42,14 @@ class AudiencePage(Page):
         return OKGroupAdder(self.driver)
     
     def get_vk_group_adder(self):
-        ok_btn = self.driver.find_element_by_xpath(self.VK_BTN_XPATH)
-        ok_btn.click()
+        vk_btn = self.driver.find_element_by_xpath(self.VK_BTN_XPATH)
+        vk_btn.click()
         return VKGroupAdder(self.driver)
+        
+    def get_vk_app_adder(self):
+        vk_app_btn = self.driver.find_element_by_xpath(self.VKAPP_BTN_XPATH)
+        vk_app_btn.click()
+        return VKAppAdder(self.driver)
     
     def wait_for_load(self):
         try:
@@ -109,6 +114,10 @@ class OKGroupAdder(GroupAdder):
     pass
 
 class VKGroupAdder(GroupAdder):
+    def check_has_helper(self):
+        return check_visible(self.HELPER_XPATH, self.driver, ttl=5)
+
+class VKAppAdder(GroupAdder):
     def check_has_helper(self):
         return check_visible(self.HELPER_XPATH, self.driver, ttl=5)
     
@@ -187,3 +196,15 @@ class TargetTest(unittest.TestCase):
         vk_ctr_adder = self.page.get_vk_group_adder()
         vk_ctr_adder.input_group(vk_strange_theme)
         self.assertFalse(vk_ctr_adder.check_has_helper())
+    
+    def test_vk_app_filters_wrong(self):
+        vk_strange_app = "asdfsdfsdfsdfasdf12312@as2"
+        vk_app_adder = self.page.get_vk_app_adder()
+        vk_app_adder.input_group(vk_strange_app)
+        self.assertFalse(vk_app_adder.check_has_helper())
+    
+    def test_vk_app_has_helper(self):
+        vk_app_name = "Mail"
+        vk_app_adder = self.page.get_vk_app_adder()
+        vk_app_adder.input_group(vk_app_name)
+        self.assertTrue(vk_app_adder.check_has_helper())

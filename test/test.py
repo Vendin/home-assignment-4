@@ -7,7 +7,7 @@ import unittest
 from selenium import webdriver
 from selenium.webdriver import DesiredCapabilities, Remote
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
@@ -47,6 +47,9 @@ class MainPage(Page):
     LOGIN_BTN_XPATH = '//span[contains(@class, "ph-button__inner_profilemenu_signin")]'
     MENU_BTN_XPATH = '//span[@xname="clb2490734"]'
 
+    INTERNAL_URL = 'https://target.my.com/ads/campaigns/'
+    INTERNAL_ELEMENT_XPATH = '//*[contains(@class, "campaign-toolbar__create-button")]'
+
     @property
     def login_button(self):
         return Button(self.driver, self.LOGIN_BTN_XPATH)
@@ -61,11 +64,26 @@ class MainPage(Page):
     def menu_button_exists(self):
         return Page.check_element_exists(self, self.MENU_BTN_XPATH)
 
+    def login_mail(self):
+        self.login_button.click()
+        login_menu = AuthoriseMenu(self.driver)
+        login_menu.click_mail()
+
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, self.INTERNAL_ELEMENT_XPATH)
+                )
+            )
+            return True
+        except TimeoutException:
+            return False
+
     def open(self):
         Page.open(self)
         try:
             WebDriverWait(self.driver, 10).until(
-                expected_conditions.presence_of_element_located((By.XPATH, self.LOGIN_BTN_XPATH))
+                EC.presence_of_element_located((By.XPATH, self.LOGIN_BTN_XPATH))
             )
         except TimeoutException:
             print "No login button found"
@@ -78,6 +96,21 @@ class Button(Component):
 
     def click(self):
         self.button.click()
+
+class AuthoriseMenu(Component):
+    MAIL_XPATH = '//span[contains(@class, "mycom-auth__social-icon_mail")]'
+
+    def __init__(self, driver):
+        Component.__init__(self, driver)
+        WebDriverWait(driver, 2).until(
+            EC.visibility_of_element_located((
+                By.XPATH, self.MAIL_XPATH
+            ))
+        )
+
+    def click_mail(self):
+        mail_button = self.driver.find_element_by_xpath(self.MAIL_XPATH)
+        mail_button.click()
 
 class TargetTest(unittest.TestCase):
     USERNAME = u'name'
@@ -100,6 +133,7 @@ class TargetTest(unittest.TestCase):
         )
         """
         self.main_page = MainPage(self.driver)
+        self.main_page.open()
 
 
     def tearDown(self):
@@ -107,11 +141,10 @@ class TargetTest(unittest.TestCase):
         self.driver.quit()
 
     def test_login_button_present(self):
-        self.main_page.open()
         self.assertTrue(self.main_page.login_button_exists())
 
     def test_menu_button_present(self):
-        self.main_page.open()
         self.assertTrue(self.main_page.menu_button_exists())
 
-
+    def test_login_mail(self):
+        self.assertTrue(self.main_page.login_mail())

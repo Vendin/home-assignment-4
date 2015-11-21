@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 
 from helpers import Page, Component
 from main_page import MainPage
@@ -49,11 +50,14 @@ class TopCtrAdder(Component):
   ADD_BTN_XPATH = '//span[@data-name="remarketingCounter"]/ancestor::div[@class="source-form"]/descendant::input[@type="submit"]'
   ERR_MSG_XPATH = '//div[@class="source-form__error js-counter-form-error"]'
   
+  TOP_CTR_ID_XPATH_TMPL = '//ul[@class="sources-list__list-wrapper js-list-wrapper"]/descendant::span[@class="source-list-item__id" and text()="%i"]'
+  
   def add_ctr(self, ctr_id):
     input = self.driver.find_element_by_xpath(self.INPUT_XPATH)
     add_btn = self.driver.find_element_by_xpath(self.ADD_BTN_XPATH)
     input.send_keys(str(ctr_id))
     add_btn.click()
+    self.check_has_ctr(ctr_id)
   
   def check_has_error(self):
     try:
@@ -65,6 +69,44 @@ class TopCtrAdder(Component):
         return True
     except TimeoutException:
         return False
+  
+  def check_has_ctr(self, id):
+      try:
+          WebDriverWait(self.driver, 2).until(
+              EC.visibility_of_element_located((
+                  By.XPATH, self.TOP_CTR_ID_XPATH_TMPL % id
+              ))
+          )
+          return True
+      except TimeoutException:
+          return False
+          
+  def _wait_no_ctr(self, id):
+      try:
+          WebDriverWait(self.driver, 2).until(
+              EC.invisibility_of_element_located((
+                  By.XPATH, self.TOP_CTR_ID_XPATH_TMPL % id
+              ))
+          )
+          return True
+      except TimeoutException:
+          return False
+  
+  def delete_ctr(self, id):
+      id_xpath = self.TOP_CTR_ID_XPATH_TMPL % id
+      li_xpath = id_xpath + '/parent::li'
+      
+      li = self.driver.find_element_by_xpath(li_xpath)
+      del_xpath = li_xpath + '/span[contains(@class, "source-list-item__delete")]'
+      delete = self.driver.find_element_by_xpath(del_xpath)
+      
+      self.driver.execute_script(
+        """arguments[0].style.visibility='visible';
+           arguments[0].style.display='block';""",
+        delete
+      )
+      delete.click()
+      self._wait_no_ctr(id)
 
 class TargetTest(unittest.TestCase):
     USERNAME = u'name'
@@ -99,7 +141,21 @@ class TargetTest(unittest.TestCase):
         self.driver.quit()
     
     def test_ctr_filters_input(self):
-        wrong_ctr_id = 123
-        top_ctr_adder = self.page.get_top_ctr_adder();
+        wrong_ctr_id = 0
+        top_ctr_adder = self.page.get_top_ctr_adder()
         top_ctr_adder.add_ctr(wrong_ctr_id)
         self.assertTrue(top_ctr_adder.check_has_error())
+    
+    def test_ctr_adds(self):
+        right_ctr_id = 240
+        top_ctr_adder = self.page.get_top_ctr_adder()
+        top_ctr_adder.add_ctr(right_ctr_id)
+        self.assertTrue(top_ctr_adder.check_has_ctr(right_ctr_id))
+        top_ctr_adder.delete_ctr(right_ctr_id)
+    
+    def test_ctr_deletes(self):
+        right_ctr_id = 240
+        top_ctr_adder = self.page.get_top_ctr_adder()
+        top_ctr_adder.add_ctr(right_ctr_id)
+        top_ctr_adder.delete_ctr(right_ctr_id)
+        self.assertFalse(top_ctr_adder.check_has_ctr(right_ctr_id))

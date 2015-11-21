@@ -133,6 +133,7 @@ class AuthorizeMenu(Component):
 class MailAuthorize(Component):
     LOGIN_XPATH = '//*[@id="login"]'
     PASSWORD_XPATH = '//*[@id="password"]'
+    SUBMIT_XPATH = '//button[@type="submit"]'
     
     def __init__(self, driver, popup_handle, window_handle):
         Component.__init__(self, driver)
@@ -141,13 +142,14 @@ class MailAuthorize(Component):
         self.driver.switch_to.window(self.popup_handle)
         self.login_input = driver.find_element_by_xpath(self.LOGIN_XPATH)
         self.password_input = driver.find_element_by_xpath(self.PASSWORD_XPATH)
+        self.submit_button = driver.find_element_by_xpath(self.SUBMIT_XPATH)
         self.driver.switch_to.window(self.window_handle)
     
     def login(self, username, password):
         self.driver.switch_to.window(self.popup_handle)
         self.login_input.send_keys(username)
         self.password_input.send_keys(password)
-        self.password_input.submit()   
+        self.submit_button.click()   
         self.driver.switch_to.window(self.window_handle)
 
 class TargetTest(unittest.TestCase):

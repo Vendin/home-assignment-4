@@ -21,6 +21,7 @@ class Page:
 
     def __init__(self, driver):
         self.driver = driver
+        self.window_handle = driver.current_window_handle
 
     def open(self):
         url = urljoin(self.BASE_URL, self.PATH)
@@ -49,7 +50,7 @@ class MainPage(Page):
 
     INTERNAL_URL = 'https://target.my.com/ads/campaigns/'
     INTERNAL_ELEMENT_XPATH = '//*[contains(@class, "campaign-toolbar__create-button")]'
-
+    
     @property
     def login_button(self):
         return Button(self.driver, self.LOGIN_BTN_XPATH)
@@ -63,12 +64,29 @@ class MainPage(Page):
 
     def menu_button_exists(self):
         return Page.check_element_exists(self, self.MENU_BTN_XPATH)
+      
+    def get_popup(self, driver):
+      popup_handle = None
+      for handle in driver.window_handles:
+          if handle != self.window_handle:
+              popup_handle = handle
+              break
+      return popup_handle
 
-    def login_mail(self):
+    def login_mail(self, username, password):
         self.login_button.click()
-        login_menu = AuthoriseMenu(self.driver)
+        login_menu = AuthorizeMenu(self.driver)
+        popup_handle = None
         login_menu.click_mail()
-
+        popup_handle = WebDriverWait(self.driver, 10).until(
+          self.get_popup
+        )
+        mail_auth = MailAuthorize(self.driver, popup_handle, self.window_handle)
+        mail_auth.login(username, password)
+        
+        return self.wait_for_internal_loaded()
+    
+    def wait_for_internal_loaded(self):
         try:
             WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located(
@@ -97,7 +115,7 @@ class Button(Component):
     def click(self):
         self.button.click()
 
-class AuthoriseMenu(Component):
+class AuthorizeMenu(Component):
     MAIL_XPATH = '//span[contains(@class, "mycom-auth__social-icon_mail")]'
 
     def __init__(self, driver):
@@ -112,13 +130,33 @@ class AuthoriseMenu(Component):
         mail_button = self.driver.find_element_by_xpath(self.MAIL_XPATH)
         mail_button.click()
 
+class MailAuthorize(Component):
+    LOGIN_XPATH = '//*[@id="login"]'
+    PASSWORD_XPATH = '//*[@id="password"]'
+    
+    def __init__(self, driver, popup_handle, window_handle):
+        Component.__init__(self, driver)
+        self.window_handle = window_handle
+        self.popup_handle = popup_handle
+        self.driver.switch_to.window(self.popup_handle)
+        self.login_input = driver.find_element_by_xpath(self.LOGIN_XPATH)
+        self.password_input = driver.find_element_by_xpath(self.PASSWORD_XPATH)
+        self.driver.switch_to.window(self.window_handle)
+    
+    def login(self, username, password):
+        self.driver.switch_to.window(self.popup_handle)
+        self.login_input.send_keys(username)
+        self.password_input.send_keys(password)
+        self.password_input.submit()   
+        self.driver.switch_to.window(self.window_handle)
+
 class TargetTest(unittest.TestCase):
     USERNAME = u'name'
 
     def setUp(self):
         browser = os.environ.get('TTHA4BROWSER', 'FIREFOX')
-        self.password = os.environ.get('TTHA4PASSWORD')
-        self.login = os.environ.get('TTHA4LOGIN')
+        self.password = os.environ.get('TTHA4PASSWORD', 'password')
+        self.login = os.environ.get('TTHA4LOGIN', 'login')
         self.mode = os.environ.get('TTHA4MODE', 'mail')
 
         if browser == 'CHROME':
@@ -147,4 +185,4 @@ class TargetTest(unittest.TestCase):
         self.assertTrue(self.main_page.menu_button_exists())
 
     def test_login_mail(self):
-        self.assertTrue(self.main_page.login_mail())
+        self.assertTrue(self.main_page.login_mail(self.login, self.password))

@@ -29,6 +29,7 @@ def check_invisible(xpath, driver, ttl=2):
 class Page:
     BASE_URL = 'https://target.my.com/'
     PATH = ''
+    HDR_XPATH = ''
 
     def __init__(self, driver):
         self.driver = driver
@@ -41,7 +42,12 @@ class Page:
         self.wait_for_load()
     
     def wait_for_load(self):
-        return
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, self.HDR_XPATH))
+            )
+        except TimeoutException:
+            print "No header found"
 
     def check_element_exists(self, xpath):
         try:

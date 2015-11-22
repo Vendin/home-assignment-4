@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 class MainPage(Page):
     PATH = ''
 
-    LOGIN_BTN_XPATH = '//span[contains(@class, "ph-button__inner_profilemenu_signin")]'
+    HDR_XPATH = '//span[contains(@class, "ph-button__inner_profilemenu_signin")]'
     MENU_BTN_XPATH = '//span[@xname="clb2490734"]'
 
     INTERNAL_URL = 'https://target.my.com/ads/campaigns/'
@@ -15,10 +15,10 @@ class MainPage(Page):
     
     @property
     def login_button(self):
-        return Button(self.driver, self.LOGIN_BTN_XPATH)
+        return Button(self.driver, self.HDR_XPATH)
 
     def login_button_exists(self):
-        return Page.check_element_exists(self, self.LOGIN_BTN_XPATH)
+        return Page.check_element_exists(self, self.HDR_XPATH)
 
     @property
     def menu_button(self):
@@ -58,14 +58,6 @@ class MainPage(Page):
             return True
         except TimeoutException:
             return False
-
-    def wait_for_load(self):
-        try:
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, self.LOGIN_BTN_XPATH))
-            )
-        except TimeoutException:
-            print "No login button found"
             
 class Button(Component):
     def __init__(self, driver, xpath):

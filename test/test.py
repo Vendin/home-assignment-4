@@ -1,7 +1,7 @@
 import os
 import unittest
 from selenium import webdriver
-from main_page import MainPage
+from page.main_page import MainPage
 from selenium.webdriver import DesiredCapabilities, Remote
 
 

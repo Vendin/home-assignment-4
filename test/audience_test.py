@@ -99,6 +99,5 @@ class TargetTestAudience(TargetTest):
         aud_form.submit()
         aud_element = self.page.get_aud_element(aud_name)
         self.assertIsNotNone(aud_element)
-        if aud_element is not None:
-            aud_element.delete()
+        aud_element.delete()
 

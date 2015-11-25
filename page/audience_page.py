@@ -40,11 +40,13 @@ class AudiencePage(Page):
         return TopCtrAdder(self.driver)
 
     def get_ok_group_adder(self):
+        check_visible(self.OK_BTN_XPATH, self.driver)
         ok_btn = self.driver.find_element_by_xpath(self.OK_BTN_XPATH)
         ok_btn.click()
         return OKGroupAdder(self.driver)
 
     def get_vk_group_adder(self):
+        check_visible(self.VK_BTN_XPATH, self.driver)
         vk_btn = self.driver.find_element_by_xpath(self.VK_BTN_XPATH)
         vk_btn.click()
         return VKGroupAdder(self.driver)
@@ -73,18 +75,18 @@ class AudiencePage(Page):
         return aud_form
 
     def get_aud_element(self, name):
-        if check_visible(AudienceElement.HDR_XPATH_TMPL % name, self.driver):
+        if check_visible(AudienceElement.HDR_XPATH_TMPL % name, self.driver, ttl=7):
             return AudienceElement(self.driver, name);
         else:
             return None
 
 
 class TopCtrAdder(Component):
-    INPUT_XPATH = '//span[@data-name="remarketingCounter"]/parent::*/following-sibling::input'
-    ADD_BTN_XPATH = '//span[@data-name="remarketingCounter"]/ancestor::div[@class="source-form"]/descendant::input[@type="submit"]'
+    INPUT_XPATH = '//input[contains(@class, "js-counter-form-input")]'
+    ADD_BTN_XPATH = '//input[contains(@class,"js-counter-form-add")]'
     ERR_MSG_XPATH = '//div[@class="source-form__error js-counter-form-error"]'
 
-    TOP_CTR_ID_XPATH_TMPL = '//ul[@class="sources-list__list-wrapper js-list-wrapper"]/descendant::span[@class="source-list-item__id" and text()="%i"]'
+    TOP_CTR_ID_XPATH_TMPL = '//ul[contains(@class, "js-list-wrapper")]/descendant::span[@class="source-list-item__id" and text()="%i"]'
 
     def add_ctr(self, ctr_id):
         input = self.driver.find_element_by_xpath(self.INPUT_XPATH)

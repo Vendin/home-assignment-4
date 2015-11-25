@@ -2,6 +2,10 @@ __author__ = 'av'
 
 from page import Page
 from my_util.helpers import check_visible
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 
 class ProfilePage(Page):
@@ -13,6 +17,14 @@ class ProfilePage(Page):
     INPUT_EMAIL  = '//input[contains(@data-name, "email")]'
     BUTTON_SUBMIT = '//input[contains(@data-type, "save")]'
     MESSAGE_OK = '//div[contains(@class, "base-form__response")]'
+
+    def wait_for_load(self):
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, self.HDR_XPATH))
+            )
+        except TimeoutException:
+            print "No header found"
 
     def get_profile(self, info):
         input = self.driver.find_element_by_xpath(info)

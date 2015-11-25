@@ -16,6 +16,7 @@ from test import TargetTest
 from my_util.helpers import check_visible
 from page.page import Page
 from page.profile_page import ProfilePage
+from selenium.common.exceptions import TimeoutException
 
 class TargetTestProfile(TargetTest):
 
@@ -23,32 +24,36 @@ class TargetTestProfile(TargetTest):
         self.page = ProfilePage(self.driver)
         self.page.open()
 
+    def setUp(self):
+          TargetTest.setUp(self)
+          self.name = self.page.get_profile(ProfilePage.INPUT_FIO)
+          self.info = self.page.get_profile(ProfilePage.INPUT_INFO)
+          self.email = self.page.get_profile(ProfilePage.INPUT_EMAIL)
+
+    def tearDown(self):
+            self.page.edit_prolfile(ProfilePage.INPUT_FIO, self.name)
+            self.page.edit_prolfile(ProfilePage.INPUT_INFO, self.info)
+            self.page.edit_prolfile(ProfilePage.INPUT_EMAIL, self.email)
+            self.page.edit_save()
+            TargetTest.tearDown(self)
+
     def test_rename(self):
-            name = self.page.get_profile(ProfilePage.INPUT_FIO)
             self.page.edit_prolfile(ProfilePage.INPUT_FIO, "Name")
             self.page.edit_save()
             self.driver.refresh()
             check_visible(ProfilePage.BUTTON_SUBMIT, self.driver, 5)
             self.assertEquals(self.page.get_profile(ProfilePage.INPUT_FIO), "Name")
-            self.page.edit_prolfile(ProfilePage.INPUT_FIO, name)
-            self.page.edit_save()
 
     def test_reinfo(self):
-            info = self.page.get_profile(ProfilePage.INPUT_INFO)
             self.page.edit_prolfile(ProfilePage.INPUT_INFO, "Info")
             self.page.edit_save()
             self.driver.refresh()
             check_visible(ProfilePage.BUTTON_SUBMIT, self.driver, 5)
             self.assertEquals(self.page.get_profile(ProfilePage.INPUT_INFO), "Info")
-            self.page.edit_prolfile(ProfilePage.INPUT_INFO, info)
-            self.page.edit_save()
 
     def test_reemail(self):
-            email = self.page.get_profile(ProfilePage.INPUT_EMAIL)
             self.page.edit_prolfile(ProfilePage.INPUT_EMAIL, "Mail")
             self.page.edit_save()
             self.driver.refresh()
             check_visible(ProfilePage.BUTTON_SUBMIT, self.driver, 5)
             self.assertEquals(self.page.get_profile(ProfilePage.INPUT_EMAIL), "Mail")
-            self.page.edit_prolfile(ProfilePage.INPUT_EMAIL, email)
-            self.page.edit_save()

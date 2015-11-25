@@ -11,8 +11,8 @@ class MainPage(Page):
     MENU_BTN_XPATH = '//span[@xname="clb2490734"]'
 
     INTERNAL_URL = 'https://target.my.com/ads/campaigns/'
-    INTERNAL_ELEMENT_XPATH = '//*[contains(@class, "campaign-toolbar__create-button")]'
-    
+    INTERNAL_ELEMENT_XPATH = '//*[contains(@class, "js-nav-link-campaigns")]'
+
     @property
     def login_button(self):
         return Button(self.driver, self.HDR_XPATH)
@@ -26,7 +26,7 @@ class MainPage(Page):
 
     def menu_button_exists(self):
         return Page.check_element_exists(self, self.MENU_BTN_XPATH)
-      
+
     def get_popup(self, driver):
       popup_handle = None
       for handle in driver.window_handles:
@@ -45,20 +45,16 @@ class MainPage(Page):
         )
         mail_auth = MailAuthorize(self.driver, popup_handle, self.window_handle)
         mail_auth.login(username, password)
-        
+
         return self.wait_for_internal_loaded()
-    
+
     def wait_for_internal_loaded(self):
-        try:
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, self.INTERNAL_ELEMENT_XPATH)
-                )
+        WebDriverWait(self.driver, 15).until(
+            EC.presence_of_element_located(
+                (By.XPATH, self.INTERNAL_ELEMENT_XPATH)
             )
-            return True
-        except TimeoutException:
-            return False
-            
+        )
+
 class Button(Component):
     def __init__(self, driver, xpath):
         Component.__init__(self, driver)
@@ -87,7 +83,7 @@ class MailAuthorize(Component):
     LOGIN_XPATH = '//*[@id="login"]'
     PASSWORD_XPATH = '//*[@id="password"]'
     SUBMIT_XPATH = '//button[@type="submit"]'
-    
+
     def __init__(self, driver, popup_handle, window_handle):
         Component.__init__(self, driver)
         self.window_handle = window_handle
@@ -97,10 +93,10 @@ class MailAuthorize(Component):
         self.password_input = driver.find_element_by_xpath(self.PASSWORD_XPATH)
         self.submit_button = driver.find_element_by_xpath(self.SUBMIT_XPATH)
         self.driver.switch_to.window(self.window_handle)
-    
+
     def login(self, username, password):
         self.driver.switch_to.window(self.popup_handle)
         self.login_input.send_keys(username)
         self.password_input.send_keys(password)
-        self.submit_button.click()   
+        self.submit_button.click()
         self.driver.switch_to.window(self.window_handle)

@@ -8,7 +8,7 @@ from selenium.webdriver import DesiredCapabilities, Remote
 class TargetTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.browser = os.environ.get('TTHA4BROWSER', 'FIREFOX')
+        cls.browser = os.environ.get('TTHA4BROWSER', 'CHROME')
         cls.password = os.environ.get('TTHA4PASSWORD', 'password')
         cls.login = os.environ.get('TTHA4LOGIN', 'login')
         cls.mode = os.environ.get('TTHA4MODE', 'mail')

@@ -161,6 +161,7 @@ class AudienceForm(Component):
         self._SOURCE_ERR_XPATH = self._SELF_XPATH + '/descendant::div[contains(@class, "audience-form__no-source-error")]'
 
     def input_name(self, name):
+        check_visible(self._NAME_XPATH, self.driver)
         name_input = self.driver.find_element_by_xpath(self._NAME_XPATH)
         name_input.clear()
         name_input.send_keys(name)
@@ -170,11 +171,13 @@ class AudienceForm(Component):
         mark_all_radio.click()
 
     def submit(self):
+        check_visible(self._SUBMIT_XPATH, self.driver)
         submit_btn = self.driver.find_element_by_xpath(self._SUBMIT_XPATH)
         submit_btn.click()
         check_invisible(self._SELF_XPATH, self.driver)
 
     def delete(self):
+        check_visible(self._DELETE_XPATH, self.driver)
         del_btn = self.driver.find_element_by_xpath(self._DELETE_XPATH)
         del_btn.click()
         check_visible(self._DEL_YES_XPATH, self.driver)

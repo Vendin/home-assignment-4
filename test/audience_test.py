@@ -80,7 +80,6 @@ class TargetTestAudience(TargetTest):
         vk_app_adder.input_group(vk_app_name)
         self.assertTrue(vk_app_adder.check_has_helper())
 
-
     def test_page_has_create_aud_btn(self):
         self.assertTrue(self.page.has_create_aud_btn())
 
@@ -99,5 +98,6 @@ class TargetTestAudience(TargetTest):
         aud_form.submit()
         aud_element = self.page.get_aud_element(aud_name)
         self.assertIsNotNone(aud_element)
+        aud_element = self.page.get_aud_element(aud_name)
         aud_element.delete()
 
